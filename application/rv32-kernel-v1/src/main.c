@@ -86,6 +86,17 @@ uint32_t millis(void) {
 }
 
 
+void delay_ms(uint32_t ms) {
+    uint32_t start_time = ms_ticks;
+    
+    // Use unsigned subtraction to handle timer overflow (rollover) automatically
+    while ((uint32_t)(ms_ticks - start_time) < ms) {
+        // Optional: Wait For Interrupt (wfi) 
+        // This puts the CPU into a low-power state until the next tick occurs
+        __asm__ volatile ("wfi"); 
+    }
+}
+
 
 
 
@@ -279,6 +290,7 @@ void executeCommand(char* line) {
   char buf[40];
 
   strncpy(cmd, line, 31);
+  //char* cmd = strtok(line, " ");
   cmd[31] = '\0';
 
   for (i = 0; cmd[i] != '\0'; i++) {
@@ -651,6 +663,69 @@ else if (strcmp(cmd, "flashinfo") == 0) {
     spi_flash_device_info();
     addDmesg("spiflash: Info");
 
+}
+
+else if (strcmp(cmd, "flash") == 0) {
+    // Get the first argument after "flash" (the subcommand)
+    char* cmd = strtok(line, " "); // this is needed to get the the  susequent strtok() to work
+    char* sub = strtok(NULL, " "); 
+
+    if (sub == NULL) {
+        printf("Usage: flash [info|read|write|erase] <args>\r\n");
+        return;
+    }
+
+    // --- Sub-Command: INFO ---
+    if (strcmp(sub, "info") == 0) {
+        // Assume you have a function to read and print JEDEC ID
+        //print_flash_details();
+        spi_flash_device_info();
+    }
+
+    // --- Sub-Command: READ <addr> ---
+    else if (strcmp(sub, "read") == 0) {
+        char* addrStr = strtok(NULL, " ");
+        if (!addrStr) {
+            printf("Usage: flash read <addr>\r\n");
+        } else {
+            uint32_t addr = strtoul(addrStr, NULL, 0);
+            //hexdump(addr, 256); // Re-using your hexdump from earlier
+            hex_view_spi_flash(addr, 4096);
+        }
+    }
+
+    // --- Sub-Command: ERASE <addr> ---
+    else if (strcmp(sub, "erase") == 0) {
+        char* addrStr = strtok(NULL, " ");
+        if (!addrStr) {
+            printf("Usage: flash erase <addr>\r\n");
+        } else {
+            uint32_t addr = strtoul(addrStr, NULL, 0);
+            printf("\rErasing sector at 0x%08X...\r\n", addr);
+            spi_flash_erase_sectors (addr, 1);            
+            printf("Done.\r\n");
+        }
+    }
+
+    // --- Sub-Command: WRITE <addr> <data> ---
+    else if (strcmp(sub, "write") == 0) {
+        char* addrStr = strtok(NULL, " ");
+        char* dataStr = strtok(NULL, ""); // Get everything else as the message
+
+        if (!addrStr || !dataStr) {
+            printf("Usage: flash write <addr> <text>\r\n");
+        } else {
+            uint32_t addr = strtoul(addrStr, NULL, 0);
+            uint16_t len = strlen(dataStr);
+
+            spi_flash_write_file (addr, (uint8_t*)dataStr, len);            
+            
+            printf("Wrote %d bytes to 0x%08X\r\n", len, addr);
+        }
+    }
+    else {
+        printf("\rUnknown flash command: %s\r\n", sub);
+    }
 }
 
 

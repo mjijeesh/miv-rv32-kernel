@@ -4,8 +4,8 @@
 
 v1 of kernel. Added support for spi flash.
 
-* flashinfo  command added
-* 
+below flash commands implmented 
+* flash [info|read|write|erase] <args>
 
 
 
@@ -146,62 +146,75 @@ GNU gdb (xPack GNU RISC-V Embedded GCC (Microsemi SoftConsole build), 64-bit) 9.
 The Terminal will display teh below options
 
 ```
-Initialising RV32 Kernel                                                        
-root@rv32:/# uname                                                              
-Kernel      : KernelRISCV v1.0                                                  
-Architecture: Mi-V RV32IM                                                       
-Hardware    : Microchip Creative Board                                          
-RAM         : 131584 bytes free                                                 
-Build Date  : May  1 2026 17:08:56                                              
-                                                                                
-root@rv32:/# uptime                                                             
-up 0h 0m 5s                                                                     
-                                                                                
+
+root@rv32:/# 
+Initialising Flash mmeory 
+Configuring the SPI Flash....
+Found SPI Flash ....
+Device ID    :0x00000026
+ManfactureID :0x000000BF
+SPI Flash Configuration -------OK
+Initialising File System 
+root@rv32:/# uname
+Kernel      : KernelRISCV v1.0
+Architecture: Mi-V RV32IM
+Hardware    : Microchip Creative Board
+RAM         : 131536 bytes free
+Build Date  : May  1 2026 20:16:12
+
+root@rv32:/# flash info
+                        
+Idcode : 0xBF , Device ID  : 0
+
+oot@rv32:/# flash
+                  Usage: flash [info|read|write|erase] <args>
+
+root@rv32:/# 
+
+root@rv32:/# flash erase 0x500
+                              Erasing sector at 0x00000500...
+
+ Number of sectors to be erased :  1
+ Erasing Sector @ 0x00000500
+ Erasing Completed 
+ :Done.
+
 root@rv32:/# 
 
 
-root@rv32:/# help                                                               
-                                                                                
-Commands: ls, cd, pwd, mkdir, touch, cat, echo, rm, info                        
-          pinmode, write, read, gpio, pwm, sh                                   
-          uptime, uname, dmesg, df, free, whoami, clear, reboot                 
-GPIO: gpio [pin] on/off/toggle  |  gpio vixa [count]                            
-SH:   sh [file]  -- run script (use ; as line separator)                        
+root@rv32:/# flash write 0x100 abcdef
+
+ Writing File Completed
+Wrote 6 bytes to 0x00000100
+
 root@rv32:/# 
 
+root@rv32:/# flash read 0x100
 
-root@rv32:/# gpio                                                               
-                                                                                
-Usage: gpio [pin] [on/off] OR gpio vixa [count]                                 
-root@rv32:/# gpio 1 on                                                          
-GPIO 1 ON                                                                       
-root@rv32:/# gpio 0 on                                                          
-GPIO 0 ON                                                                       
-root@rv32:/# gpio vixa 20                                                       
-LED DISCO MODE!                                                                 
-Disco finished!                                                                 
-root@rv32:/# 
+              00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F   ASCII Value 
+  ------------------------------------------------------------------------------- 
+  0x00000100| 61 62 63 64 65 66 FF FF FF FF FF FF FF FF FF FF | a b c d e f � � � � � � � � � � 
+  0x00000110| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000120| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000130| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000140| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000150| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000160| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000170| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000180| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x00000190| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x000001A0| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x000001B0| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x000001C0| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x000001D0| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x000001E0| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+  0x000001F0| FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF | � � � � � � � � � � � � � � � � 
+ press any key to continue or 'x' to exit
 
 
-root@rv32:/# pwd                                                                
-/                                                                               
-                                                                                
-root@rv32:/# ls                                                                 
-home/  dev/                                                                     
-                                                                                
-root@rv32:/# mkdir test                                                         
-OK.                                                                             
-                                                                                
-root@rv32:/# ls                                                                 
-home/  dev/  test/                                                              
-                                                                                
-root@rv32:/# 
 
-root@rv32:/# reboot                                                             
-Rebooting (Software)...                                                         
-                                                                                
-root@rv32:/# panic                                                              
-KERNEL PANIC: Manual Trigger 
+
+
 
  ```
 
