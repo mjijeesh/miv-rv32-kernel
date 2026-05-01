@@ -1,4 +1,4 @@
-## CKernelRISCV v1.1
+## KernelRISCV v1.1
 ---------------------------
 
 
