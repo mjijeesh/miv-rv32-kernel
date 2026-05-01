@@ -58,8 +58,7 @@ use "cont" comamnd to run further
 
 ```
 
-```
-root@rv32:/#                                                                    
+                                                             
 Initialising RV32 Kernel                                                        
 root@rv32:/# uname                                                              
 Kernel      : KernelRISCV v1.0                                                  
@@ -116,7 +115,6 @@ Rebooting (Software)...
                                                                                 
 root@rv32:/# panic                                                              
 KERNEL PANIC: Manual Trigger 
-
 
 ```
 
