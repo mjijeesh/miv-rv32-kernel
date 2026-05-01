@@ -141,7 +141,7 @@ GNU gdb (xPack GNU RISC-V Embedded GCC (Microsemi SoftConsole build), 64-bit) 9.
 
 ```
 
-## UART Terminal
+## SPI Commands
 
 The Terminal will display teh below options
 
@@ -215,6 +215,69 @@ root@rv32:/# flash read 0x100
 
 
 
+
+ ```
+
+
+ ### Basic Commands 
+
+```
+Initialising RV32 Kernel                                                        
+root@rv32:/# uname                                                              
+Kernel      : KernelRISCV v1.0                                                  
+Architecture: Mi-V RV32IM                                                       
+Hardware    : Microchip Creative Board                                          
+RAM         : 131584 bytes free                                                 
+Build Date  : May  1 2026 17:08:56                                              
+                                                                                
+root@rv32:/# uptime                                                             
+up 0h 0m 5s                                                                     
+                                                                                
+root@rv32:/# 
+
+
+root@rv32:/# help                                                               
+                                                                                
+Commands: ls, cd, pwd, mkdir, touch, cat, echo, rm, info                        
+          pinmode, write, read, gpio, pwm, sh                                   
+          uptime, uname, dmesg, df, free, whoami, clear, reboot                 
+GPIO: gpio [pin] on/off/toggle  |  gpio vixa [count]                            
+SH:   sh [file]  -- run script (use ; as line separator)                        
+root@rv32:/# 
+
+
+root@rv32:/# gpio                                                               
+                                                                                
+Usage: gpio [pin] [on/off] OR gpio vixa [count]                                 
+root@rv32:/# gpio 1 on                                                          
+GPIO 1 ON                                                                       
+root@rv32:/# gpio 0 on                                                          
+GPIO 0 ON                                                                       
+root@rv32:/# gpio vixa 20                                                       
+LED DISCO MODE!                                                                 
+Disco finished!                                                                 
+root@rv32:/# 
+
+
+root@rv32:/# pwd                                                                
+/                                                                               
+                                                                                
+root@rv32:/# ls                                                                 
+home/  dev/                                                                     
+                                                                                
+root@rv32:/# mkdir test                                                         
+OK.                                                                             
+                                                                                
+root@rv32:/# ls                                                                 
+home/  dev/  test/                                                              
+                                                                                
+root@rv32:/# 
+
+root@rv32:/# reboot                                                             
+Rebooting (Software)...                                                         
+                                                                                
+root@rv32:/# panic                                                              
+KERNEL PANIC: Manual Trigger 
 
  ```
 
