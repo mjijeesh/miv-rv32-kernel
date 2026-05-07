@@ -18,6 +18,7 @@ CONFIG_USE_CORE_SPI      = Y
 CONFIG_STDIO_THRU_CORE_UART_APB  = Y
 CONFIG_USE_CORE_UART_PRINT       = Y
 CONFIG_USE_SPI_FLASH             = Y
+CONFIG_USE_YMODEM                = N
 
 # need the below to enable printf funtions via coreuart
 #CONFIG_STDIO_THRU_CORE_UART_APB = Y
@@ -33,7 +34,7 @@ CONFIG_USE_SPI_FLASH             = Y
 #-----------------------------------------------------
 # Use the below Option to use a custom linker file
 #-----------------------------------------------------
-#LDFILE      = boards/$(BOARD_DIR)/platform_config/linker/miv-rv32-tcm.ld
+LDFILE      = boards/$(BOARD)/platform_config/linker/miv-rv32-esram.ld
 
 #-----------------------------------------------------
 #  By default the build will be for -O0 and -g3,
@@ -48,6 +49,7 @@ CONFIG_USE_SPI_FLASH             = Y
 #------------------------------------------------------------
 
 APP_SRC += $(APP_HOME)/src/main.c 
+APP_SRC += middleware/ymodem/ymodem.c 
 
 
 #---------------------------------------------------------

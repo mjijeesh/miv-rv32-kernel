@@ -1163,7 +1163,7 @@ uint32_t ymodem_download_file_spi_flash(uint32_t spi_flash_address,uint32_t leng
 
                                 /* program the packet to the location specified */
                                   spi_flash_write(spi_flash_address, buf_ptr, packet_length);
-                                  quit
+                                  
                                 //g_errors += errors ; // capture any write error into the g_error_variable
 
                                 /* increment the spi_flash_address for next write */

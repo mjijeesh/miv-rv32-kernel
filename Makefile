@@ -3,7 +3,8 @@
 #---------------------------------------------------
 #TARGET       ?= rv32-coretimer-irq
 #TARGET        ?= uartcli
-TARGET        ?= rv32-kernel-v0
+#TARGET        ?= rv32-kernel-v0
+TARGET        ?= rv32-kernel-v2
 
 #-----------------------------------------------------
 #select one of the board from the below list available 

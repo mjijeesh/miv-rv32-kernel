@@ -4,10 +4,69 @@
 V2 of the kernel :
 
 
-TODO: Add the Ymodem feature to downlaod the fiel from PC 
+###  New Feature:
+  Added the command ymodem 
+  Download a file using ymodem  protocol. The file will be downlaoded into the  LSRAM/DDR memory ara at 0x80000000
+
+
+### Hardware
+
+  This uses a new hardware design. The RV32 core has been modified to use only a single AHB interface with memory map as beow 
+  ```
+  0x20000000 - 0x8fffffff
+
+  ```
+  An AHBLite interface s used to connect the Slot 7 to MIV_ESS and Slot8 to the DDR Interface and Slot 2 to FIC_0 of CM3 .
+  The 0x20000000 give access to the on chip 64KB of esram. The program is going to run from this memory. reset address of the RV32 is kept at 0x80000000 itself. can be changed later.
+
+  When runnign the program from DDR memory, ymodem never works for some strange reason.
+
+  However the fiel can be downlaoded into the ddr memory.
+
+  This also needs a new linker file.
+  `miv-rv32-esram.ld`
+
+  ```
+
+    MEMORY
+    {
+        ram (rwx) : ORIGIN = 0x20000000, LENGTH = 64k /* 512k previously */
+    }
+
+    RAM_START_ADDRESS   = 0x20000000;       /* Must be the same value MEMORY region ram ORIGIN above. */        
+    RAM_SIZE            = 64k;              /* Must be the same value MEMORY region ram LENGTH above. */
+    STACK_SIZE          = 4k;               /* needs to be calculated for your application */ /* 2k previously */
+    HEAP_SIZE           = 1k;               /* needs to be calculated for your application */ /* 4 previously */
+
+
+  ```
+
+### Running the `ymodem' command
+
+ from the terminam menu  use the command `ymodem'  .
+
+ This will start teh ymodem transfer.
+ Use the terminal application's ymodem tarnsfer option.
+
+ For eg: in `minicom`  Ctrl-A + Z -> S -> ymodem -> select file
 
 
 
+```
+root@rv32:/# ymodem             
+                                                                                                                                            
+------------------------ Starting YModem file transfer to ram/ddr Memory----------
+Please select file and initiate transfer on host computer.                                                                                      
+CCC
+File Size : 127999  File Name :  rv32-kernel-v2.bin
+File Transfer Completed.
+
+
+```
+
+end of update 
+7th April 2026
+-----------------------------------------------------------------------------------------------------------------------------------------
 
 v1 of kernel. Added support for spi flash.
 

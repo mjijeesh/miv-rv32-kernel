@@ -57,7 +57,7 @@
  * This is the only clock brought over from the Mi-V Libero design.
  */
 #ifndef SYS_CLK_FREQ
-#define SYS_CLK_FREQ                    83300000UL
+#define SYS_CLK_FREQ                    50000000UL
 #endif
 
 
@@ -73,11 +73,29 @@
  * The system can be further extended by attaching APB peripherals to the 
  * empty APB slots.
  */
-#define COREUARTAPB0_BASE_ADDR          0x60001000UL
-#define COREGPIO_BASE_ADDR              0x60002000UL
-#define CORETIMER0_BASE_ADDR            0x60003000UL
-#define CORESPI0_BASE_ADDR              0x60004000UL
-#define FLASH_CORE_SPI_BASE             0x60005000UL
+#define MIV_ESS_BASE_ADDR               0x70000000UL
+#define MIV_PLIC_BASE_ADDR              0x70000000UL
+#define COREUARTAPB0_BASE_ADDR          0x71000000UL
+#define MIV_MTIMER_BASE_ADDR            0x72000000UL
+
+#define MIV_ESS_APBSLOT3_BASE_ADDR      0x73000000UL
+#define MIV_ESS_APBSLOT4_BASE_ADDR      0x74000000UL
+
+#define COREGPIO_BASE_ADDR              0x75000000UL
+#define CORESPI_BASE_ADDR               0x76000000UL
+#define MIV_ESS_uDMA_BASE_ADDR          0x78000000UL
+#define MIV_WDT_BASE_ADDR               0x79000000UL
+#define MIV_I2C_BASE_ADDR               0x7A000000UL
+
+#define MIV_ESS_APBSLOTB_BASE_ADDR      0x7B000000UL
+#define MIV_ESS_APBSLOTC_BASE_ADDR      0x7C000000UL
+#define MIV_ESS_APBSLOTD_BASE_ADDR      0x7D000000UL
+#define MIV_ESS_APBSLOTE_BASE_ADDR      0x7E000000UL
+#define MIV_ESS_APBSLOTF_BASE_ADDR      0x7F000000UL
+
+#define CORETIMER0_BASE_ADDR            MIV_ESS_APBSLOT3_BASE_ADDR
+#define CORETIMER1_BASE_ADDR            MIV_ESS_APBSLOT4_BASE_ADDR
+
 
 
 //#define COREGPIO_OUT_BASE_ADDR          0x60005000UL

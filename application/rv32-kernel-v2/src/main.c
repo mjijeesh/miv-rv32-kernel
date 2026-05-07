@@ -19,6 +19,7 @@
 
 #include "stdio/uart_stdio.h"
 #include "spi_flash/spi_flash.h"
+#include "ymodem/ymodem.h"
 
 
 
@@ -31,7 +32,7 @@ spi_instance_t  g_spi_0;
 
 
 /* --- Configuration --- */
-#define MAX_FILES 10         
+#define MAX_FILES 15        
 #define NAME_LEN 12          
 #define CONTENT_LEN 32      
 #define PATH_LEN 16         
@@ -44,6 +45,11 @@ spi_instance_t  g_spi_0;
 #define OUTPUT         GPIO_OUTPUT_MODE
 #define INPUT_PULLUP   GPIO_INPUT_MODE
 
+//#define MAX_FILES 15
+#define FILE_NAME_LENGTH (64)
+#define FILE_SIZE_LENGTH (16)
+
+
 
 #define pinMode(pin, MODE)   GPIO_config( &g_gpio,pin,MODE)
 
@@ -51,6 +57,16 @@ spi_instance_t  g_spi_0;
 #define digitalRead(pin) ((GPIO_get_inputs(&g_gpio) >> (pin)) & 0x01)
 #define digitalOutRead(pin) ((GPIO_get_outputs(&g_gpio) >> (pin)) & 0x01)
 
+uint32_t file_download(uint8_t * g_bin_base , uint8_t * file_name );
+uint32_t ymodem_receive(uint8_t *buf, uint32_t length, uint8_t *file_name, uint32_t memory_size);
+static uint32_t rx_app_file(uint8_t *dest_address);
+
+//uint8_t rcv_buff[32*1024*8];
+
+
+#define LSRAM_BASE_ADDRESS_LOAD         0x80000000
+#define LSRAM_BASE_ADDRESS_WRITE        0x89000000
+#define LSRAM_SIZE                      131072u
 
 
 /* --- Structures --- */
@@ -68,6 +84,19 @@ typedef struct {
   char message[DMESG_LEN];
 } DmesgEntry;
 
+
+
+typedef struct {
+    uint8_t     file_name[FILE_NAME_LENGTH];           // File name (max 32 characters)
+    uint8_t     size[FILE_SIZE_LENGTH];          // file size in string
+    uint32_t    file_size;       // file size in bytes
+    uint32_t    file_addr;       // addr offset in spi flash memory
+    uint8_t     *file_ptr;       // Pointer to the file in DDR memory
+    uint32_t    checksum;        // file checksum
+} file_t;
+
+
+
 /* --- Global State --- */
 RAMFile fs[MAX_FILES];
 char currentPath[PATH_LEN] = "/";
@@ -78,6 +107,8 @@ int dmesgIndex = 0;
 
 
 static volatile uint32_t ms_ticks = 0;
+volatile uint32_t g_10ms_count=0;
+
 void executeCommand(char* line) ;
 
 // The replacement for millis()
@@ -103,6 +134,23 @@ void delay_ms(uint32_t ms) {
 void SysTick_Handler(void)
 {
     ms_ticks++;
+
+    /* Only increment every 10th tick (when ms_ticks is a multiple of 10) */
+   // if ((ms_ticks % 10) == 0)
+   // {
+   //     g_10ms_count++;
+   // }
+
+
+    g_10ms_count += 10;
+
+      /*
+       * For neatness, if we roll over, reset cleanly back to 0 so the count
+       * always goes up in proper 10s.
+       */
+     if(g_10ms_count < 10)
+         g_10ms_count = 0;
+
 }
 
 void delay(uint32_t ms) {
@@ -659,9 +707,13 @@ else if (strcmp(cmd, "sh") == 0) {
     }
     if (!found) printf("Script not found.\n");
 }
-else if (strcmp(cmd, "flashinfo") == 0) {   
-    spi_flash_device_info();
-    addDmesg("spiflash: Info");
+else if (strcmp(cmd, "ymodem") == 0) {   
+    uint32_t file_size;    
+    static uint8_t file_name[FILE_NAME_LENGTH + 1]; /* +1 for nul */
+    file_size = file_download((uint8_t *)LSRAM_BASE_ADDRESS_LOAD,file_name);
+     //file_size = rx_app_file(rcv_buff);
+     //file_size= rx_app_file((uint8_t *)LSRAM_BASE_ADDRESS_LOAD);
+    addDmesg("ymodem: download");
 
 }
 
@@ -735,6 +787,7 @@ else if (strcmp(cmd, "flash") == 0) {
     printf("\r\n          uptime, uname, dmesg, df, free, whoami, clear, reboot");
     printf("\r\nGPIO: gpio [pin] on/off/toggle  |  gpio vixa [count]");
     printf("\r\nSH:   sh [file]  -- run script (use ; as line separator)");
+    printf("\r\nYMODEM:   ymodem  ; Download file using ymodem protocol");
   }  
   else {
     printf("\rUnknown command.");
@@ -808,3 +861,31 @@ int main()
 
     
 }
+
+
+
+uint32_t file_download(uint8_t * g_bin_base , uint8_t * file_name )
+   {
+       uint32_t file_size;
+       file_t   file_info ;
+       uint32_t  offset_addr;
+    
+       uint32_t MAX_FILE_SIZE = 32 * 1024 * 8; // maximum size of the file to download  is set to  8MB     
+        
+        PRINT_TEXT( "\r\n------------------------ Starting YModem file transfer to ram/ddr Memory----------\r\n" );
+        PRINT_TEXT( "Please select file and initiate transfer on host computer.\r\n" );
+        //file_size = ymodem_download_file_ddr( (uint8_t *)offset_addr, MAX_FILE_SIZE, &file_info);      
+        file_size = ymodem_receive(g_bin_base, MAX_FILE_SIZE, file_name, LSRAM_SIZE) ;               
+        PRINT_TEXT( "\r\nFile Size :  " );
+        PRINT_DNUM(file_size );
+        PRINT_TEXT( "\r\nFile Name :  " );
+        PRINT_TEXT(file_name );
+
+        PRINT_TEXT( "\r\nFile Transfer Completed.\r\n" );       
+        return file_size;
+
+   }
+
+
+   
+

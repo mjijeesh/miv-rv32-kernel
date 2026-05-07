@@ -42,6 +42,7 @@ CONFIG_USE_SPI_FLASH             = Y
 #OPT_FLAG   = -Os
 #DEBUG_FLAG = -g
 
+USER_FLAGS += -D DEBUG
 
 #------------------------------------------------------------
 # Application Source Files
