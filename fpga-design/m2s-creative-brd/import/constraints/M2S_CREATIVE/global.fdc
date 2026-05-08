@@ -1,0 +1,2 @@
+define_attribute  {n:DDR_MSS_SYS_0_FAB_CCC_GL0} {syn_noclockbuf} {1}
+define_attribute  {n:DDR_MSS_SYS_0_FAB_CCC_GL0} {syn_maxfan} {100000}

@@ -1,0 +1,39 @@
+
+# SPI Slave
+#    
+    
+#SPI_FLASH_SDI
+set_io -port_name FLASH_SDI \
+    -pin_name  C18\
+    -fixed true        \
+    -DIRECTION INPUT
+
+#SPI_FLASH_SCK
+set_io -port_name FLASH_SCK \
+    -pin_name  H19\
+    -fixed true        \
+    -DIRECTION OUTPUT 
+	
+#SPI_FLASH_SDO
+set_io -port_name FLASH_SDO \
+    -pin_name  G19\
+    -fixed true        \
+    -DIRECTION OUTPUT
+
+#SPI_FLASH_SS
+set_io -port_name FLASH_SS \
+    -pin_name  A20\
+    -fixed true        \
+    -DIRECTION OUTPUT
+
+ set_io -port_name PF_IO_SPI_HOLDn  \
+    -pin_name T7                   \
+    -fixed true                    \
+    -DIRECTION OUTPUT#   
+    
+    
+#SPI_FLASH_HOLD    
+#set_io -port_name SPI_FLASH_HOLD   \
+	-pin_name A22                  		\
+    -fixed true        \
+    -DIRECTION OUTPUT

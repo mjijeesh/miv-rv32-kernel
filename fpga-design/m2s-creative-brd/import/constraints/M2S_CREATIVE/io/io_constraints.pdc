@@ -1,0 +1,56 @@
+set_iobank bank2 -vcci 3.3 
+set_iobank bank7 -vcci 3.3 
+
+
+set_io REF_CLK      \
+    -pinname H16      \
+    -fixed yes        \
+    -iostd LVTTL      \
+    -DIRECTION INPUT
+
+### Push Button  SW2
+set_io {SW_1}   \
+    -pinname H12      \
+    -fixed yes        \
+     -iostd LVTTL      \
+    -DIRECTION INPUT
+
+# Push button SW3
+
+set_io {SW_2}   \
+    -pinname H13      \
+    -fixed yes        \
+     -iostd LVTTL      \
+    -DIRECTION INPUT
+
+    
+#### LEDS 
+# LED1_GREEN 
+set_io {LED_1 }   \
+    -pinname J16       \
+    -fixed yes         \
+     -iostd LVTTL      \
+    -DIRECTION OUTPUT
+
+# LED1_RED
+set_io {LED_2}   \
+    -pinname K16       \
+    -fixed yes         \
+     -iostd LVTTL      \
+    -DIRECTION OUTPUT
+
+
+## LED2_GREEN
+set_io {LED_3}   \
+    -pinname M16       \
+    -fixed yes         \
+     -iostd LVTTL      \
+    -DIRECTION OUTPUT
+
+## LED2_RED
+
+set_io {LED_4}   \
+    -pinname N16       \
+    -fixed yes         \
+     -iostd LVTTL      \
+    -DIRECTION OUTPUT
