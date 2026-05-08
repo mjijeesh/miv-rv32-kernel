@@ -33,7 +33,7 @@ spi_instance_t  g_spi_0;
 
 /* --- Configuration --- */
 #define MAX_FILES 15        
-#define NAME_LEN 12          
+#define NAME_LEN 32         
 #define CONTENT_LEN 32      
 #define PATH_LEN 16         
 #define DMESG_LINES 6
@@ -74,9 +74,12 @@ static uint32_t rx_app_file(uint8_t *dest_address);
 typedef struct {
   char name[NAME_LEN];
   char content[CONTENT_LEN];
-  char parentDir[PATH_LEN];
+  char parentDir[PATH_LEN];  
   int isDirectory;
   int active;
+  uint8_t *ext_content;      // Pointer to YModem/LSRAM data
+  uint32_t fileSize;         // Actual size of received data
+  int isExternal;            // Flag: 0 = use .content, 1 = use .ext_content
 } RAMFile;
 
 typedef struct {
@@ -580,9 +583,15 @@ else if (strcmp(cmd, "ls") == 0) {
             printf("\rName: %s\n", fs[j].name);
             printf("\rType: %s\n", fs[j].isDirectory ? "Directory" : "File");
             
-            // Calculate size based on string length of content
-            printf("\rSize: %u bytes", (unsigned int)strlen(fs[j].content));
-            
+            if ( fs[j].isExternal) { // the file content is in external memory         
+                 printf("\rSize: %u bytes", fs[j].fileSize);
+                 printf("\rFile address: 0x%x ", fs[j].ext_content);
+            }       
+            else {                
+              // Calculate size based on string length of content
+              printf("\rSize: %u bytes", (unsigned int)strlen(fs[j].content));
+            }
+
             found = 1;
             break;
         }
@@ -707,15 +716,59 @@ else if (strcmp(cmd, "sh") == 0) {
     }
     if (!found) printf("Script not found.\n");
 }
-else if (strcmp(cmd, "ymodem") == 0) {   
+
+#if 1
+
+else if (strcmp(cmd, "download") == 0)  {
     uint32_t file_size;    
     static uint8_t file_name[FILE_NAME_LENGTH + 1]; /* +1 for nul */
-    file_size = file_download((uint8_t *)LSRAM_BASE_ADDRESS_LOAD,file_name);
-     //file_size = rx_app_file(rcv_buff);
-     //file_size= rx_app_file((uint8_t *)LSRAM_BASE_ADDRESS_LOAD);
-    addDmesg("ymodem: download");
 
+    uint8_t * load_addr;
+
+    load_addr = (uint8_t *)LSRAM_BASE_ADDRESS_LOAD;
+    int foundSlot = -1, j;
+    // 1. Find the first available (inactive) entry in the array
+    for (j = 0; j < MAX_FILES; j++) {
+        if (!fs[j].active) { 
+            foundSlot = j; 
+            break; 
+        }
+    }
+
+    if (foundSlot == -1) { 
+        printf("No space.\n"); 
+        return; 
+    }
+
+    printf("\r\n Select the File to upload via ymodem\r\n");
+    //file_size = file_download(load_addr,file_name);
+    file_size = ymodem_receive(load_addr, LSRAM_SIZE, file_name, LSRAM_SIZE) ; 
+
+    // 2. Initialize the metadata
+    strncpy(fs[foundSlot].name, file_name, NAME_LEN - 1);
+    fs[foundSlot].name[NAME_LEN - 1] = '\0';
+    
+    strncpy(fs[foundSlot].parentDir, currentPath, PATH_LEN - 1);
+    fs[foundSlot].parentDir[PATH_LEN - 1] = '\0';
+
+    // 3. Set the type: mkdir -> Directory, touch -> File
+    fs[foundSlot].isDirectory = 0; // not a directory
+
+    fs[foundSlot].isExternal = 1; // Mark as external pointer
+    fs[foundSlot].ext_content = load_addr;
+    fs[foundSlot].fileSize = file_size;
+
+    printf("\r\nFile '%s' (%u bytes) registered in FS.\n", fs[foundSlot].name, (unsigned int)file_size);
+    
+    // 4. Wipe contents and activate
+    fs[foundSlot].content[0] = '\0';
+    fs[foundSlot].active = 1;
+    
+    printf("\rOK.\n");
+    addDmesg("ymodem: download");
 }
+#endif
+
 
 else if (strcmp(cmd, "flash") == 0) {
     // Get the first argument after "flash" (the subcommand)
