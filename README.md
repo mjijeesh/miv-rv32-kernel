@@ -9,7 +9,7 @@ V2 of the kernel :
   Download a file using ymodem  protocol. The file will be downlaoded into the  LSRAM/DDR memory ara at 0x80000000
 
 
-### Hardware
+## FPGA Hardware
 
   This uses a new hardware design. The RV32 core has been modified to use only a single AHB interface with memory map as beow 
   ```
@@ -26,6 +26,8 @@ V2 of the kernel :
   This also needs a new linker file.
   `miv-rv32-esram.ld`
 
+
+
   ```
 
     MEMORY
@@ -40,6 +42,17 @@ V2 of the kernel :
 
 
   ```
+### Buildign FPGA Hardware
+
+The fpga hardware building scripts are available in the `fpga-design/creative-brd/` folder
+it uses a mix of python and the tcl scripts to generate the libero projects
+
+use the below command to generate teh `CFG3` project for the YMDOEM supported hardware
+```
+$python3 build_gateware ./configs/config_CREATIVE_CFG3.yaml
+
+```
+
 
 ### Running the `ymodem' command
 
