@@ -1,3 +1,56 @@
+## KernelRISCV v3
+---------------------------
+
+
+TODO :  
+
+1. keep the file system persistent by keeping a copy i nthe spi flash . laod this when initializing at power up as well.
+2. copy the file from ddr memory to spi flash location
+
+Added the download command.
+
+use the command `download` to download a fiel to the ddr memory via ymodem.
+by default the file will be kept in the ddr/lsram mmeory location at `0x80000000` and the file info will be updated in the RAMfile.
+.
+
+
+```
+root@rv32:/# help                                                                                                                               
+                                                                                                                                                
+Commands: ls, cd, pwd, mkdir, touch, cat, echo, rm, info                                                                                        
+          pinmode, write, read, gpio, pwm, sh                                                                                                   
+          uptime, uname, dmesg, df, free, whoami, clear, reboot ,download                                                                              
+GPIO: gpio [pin] on/off/toggle  |  gpio vixa [count]                                                                                            
+SH:   sh [file]  -- run script (use ; as line separator)                                                                                        
+
+root@rv32:/# download                                                                                                                           
+                                                                                                                                                
+ Select the File to upload via ymodem                                                                                                           
+C4857 bytes) registered in FS.                                                                                                                  
+OK.                                                                                                                                             
+                                                                                                                                                
+root@rv32:/# ls                                                                                                                                 
+home/  dev/    rv32-kernel-v3.hex                                                                                                               
+                                                                                                                                                
+root@rv32:/# info rv32-kernel-v3.hex                                                                                                            
+Name: rv32-kernel-v3.hex                                                                                                                        
+Type: File                                                                                                                                      
+File address: 0x80000000                                                                                                                        
+                                                                                      
+root@rv32:/# uptime                                                                                                                             
+up 0h 2m 15s                                                                                                                                    
+                                                                                                                                                
+root@rv32:/# df                                                                                                                                 
+Free RAM: 4528 bytes                                                                                                                            
+                                                                                                                                                
+root@rv32:/# free                                                                                                                               
+Free RAM: 4528 bytes                                                                                                                            
+                                                                                                                                                
+root@rv32:/#                  
+
+
+```
+
 ## KernelRISCV v2
 ---------------------------
 
