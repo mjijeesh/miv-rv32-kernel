@@ -36,12 +36,18 @@
 #endif
 #include "ymodem.h"
 
+#include "spi_flash/spi_flash.h"
 
 extern UART_instance_t g_uart;
 extern volatile uint32_t g_10ms_count;
 
+/* make sure this delay() function is implmented in oe of the other file, */
+void delay(uint32_t ms) ;
+
 static uint8_t packet_data[PACKET_1K_SIZE + PACKET_OVERHEAD];
 static int32_t  packet_length;
+
+
 
 /***************************************************************************//**
  * Calculate CRC for block of data.
@@ -683,5 +689,263 @@ uint32_t ymodem_receive(uint8_t *buf, uint32_t length, uint8_t *file_name, uint3
 
     return(return_val == 1 ?  size : 0 );
 }
+
+
+/***************************************************************************//**
+ *
+ */
+/* Returns the length of the file received, or 0 on error: */
+uint32_t ymodem_receive_flash(uint32_t flash_addr, uint32_t length, uint8_t *file_name, uint32_t memory_size)
+{
+    uint8_t packet_buff[PACKET_1K_SIZE];
+    uint8_t * buf = (uint8_t *)packet_buff;
+    uint8_t file_size[FILE_SIZE_LENGTH + 1];
+    uint8_t *file_ptr;
+    int32_t  index;
+    int32_t  file_done;
+    int32_t  session_done;
+
+    int32_t  crc_nak;
+    uint32_t packets_received;
+    uint32_t errors;
+    int32_t  first_try = 1;
+    uint8_t *buf_ptr;
+    uint32_t size = 0;
+    uint32_t return_val = 0; /* Default to abnormal exit */
+    uint32_t temp;
+    int32_t  rx_status;
+
+    uint32_t spi_flash_address = flash_addr;
+
+    file_name[0] = 0;
+    session_done = 0;
+    errors       = 0;
+
+    while(0 == session_done)
+    {
+        crc_nak   = 1;
+
+        if(!first_try)
+        {
+            _putchar(CRC);
+        }
+
+        first_try        = 0;
+        packets_received = 0;
+        file_done        = 0;
+        buf_ptr          = buf;
+
+        while(0 == file_done)
+        {
+            rx_status = receive_packet(packet_data, &packet_length);
+
+            switch(rx_status)
+            {
+            case 0: /* Success */
+                errors = 0;
+
+                if (packets_received > (memory_size/packet_length))
+                {
+                    _putchar(CAN);
+                    _putchar(CAN);
+                    _sleep(1);
+
+                    /* Terminate transfer immediately */
+                    file_done    = 1;
+                    session_done = 1;
+                    break;
+                }
+
+                switch(packet_length)
+                {
+                case -1:  /* abort */
+                    _putchar(ACK);
+
+                    /* Terminate transfer immediately */
+                    file_done    = 1;
+                    session_done = 1;
+                    break;
+
+                case 0:   /* end of transmission */
+                    _putchar(ACK);
+                    /* Should add some sort of sanity check on the number of
+                     * packets received and the advertised file length.
+                     */
+                    file_done = 1;
+                    return_val = 1; /* Signal normal exit */
+                    break;
+
+                default:  /* normal packet */
+                    if((packet_data[PACKET_SEQNO_INDEX] & 0xff) != (packets_received & 0xff))
+                    {
+                        /*
+                         * Hmmm, Tera Term 4.86 doesn't seem to like the ACK+C
+                         * response and resends the header packet. Responding
+                         * with just C seems to work. Only try this if we get a
+                         * repeat of packet 0...
+                         */
+                        if((1 == packets_received) &&
+                           (0 == (packet_data[PACKET_SEQNO_INDEX] & 0xff)))
+                        {
+                            _putchar(CRC); /* Repeated packet 0 error */
+                        }
+                        else
+                        {
+                            _putchar(NAK); /* Normal out of sequence packet error */
+                        }
+                    }
+                    else
+                    {
+                        if(0 == packets_received)
+                        {
+                            /* The spec suggests that the whole data section should
+                             * be zeroed, but I don't think all senders do this. If
+                             * we have a NULL filename and the first few digits of
+                             * the file length are zero, we'll call it empty.
+                             */
+                            temp = 0;
+                            for(index = PACKET_HEADER; index < PACKET_HEADER + 4; index++)
+                            {
+                                temp += (uint32_t)packet_data[index];
+                            }
+
+                            if(0 != temp) /* looks like there is something there... */
+                            {  /* filename packet has data */
+                                file_ptr = packet_data + PACKET_HEADER;
+                                /* Copy file name until nul or too much */
+                                for(index = 0; *file_ptr && (index < FILE_NAME_LENGTH);)
+                                {
+                                    file_name[index++] = *file_ptr++;
+                                }
+
+                                file_name[index] = '\0';
+
+                                while(*file_ptr != 0) /* Check for null terminator if not present */
+                                {
+                                    ++file_ptr;
+                                }
+
+                                ++file_ptr; /* Step over nul */
+
+                                for(index = 0; *file_ptr && (*file_ptr != ' ') &&
+                                               (index < FILE_SIZE_LENGTH);)
+                                {
+                                    file_size[index++] = *file_ptr++;
+                                }
+
+                                file_size[index] = '\0';
+
+                                size = str_to_u32(file_size);
+                                if(size > length)
+                                {
+                                    _putchar(CAN);
+                                    _putchar(CAN);
+                                    _sleep(1);
+
+                                    /* Terminate transfer immediately */
+                                    file_done    = 1;
+                                    session_done = 1;
+                                }
+                                else
+                                {
+                                    _putchar(ACK);
+                                    _putchar(crc_nak ? CRC : NAK);
+                                    crc_nak = 0;
+                                }
+                            }
+                            else
+                            {  /* filename packet is empty; end session */
+                                _putchar(ACK);
+                                file_done = 1;
+                                session_done = 1;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            /* This shouldn't happen, but we check anyway in case the
+                             * sender lied in its filename packet:
+                             */
+                            if((buf_ptr + packet_length) - buf > length)
+                            {
+                                _putchar(CAN);
+                                _putchar(CAN);
+                                _sleep(1);
+
+                                /* Terminate transfer immediately */
+                                file_done    = 1;
+                                session_done = 1;
+                            }
+                            else
+                            {
+                                for (index=0; index < packet_length; index++)
+                                {
+                                    buf_ptr[index] = packet_data[PACKET_HEADER + index];
+                                }
+                                
+                                /*----------------------------------------------------------------------
+                                 * At the start of each 4K block we issue an erase  command so that we are then
+                                 * free to write anything we want to the block. The below comparison will be true
+                                 * only at the 4K address bounday. So the erase will happen only once in every
+                                 * 4K block even though the call from Ymodem will be for every 1K size.
+                                 * make sure that the initial start address of the image is set at the 4K boundary
+                                 *  so that the first sector is erased before writing. else the writing will fail
+                                 */
+                                if(0 == (spi_flash_address % FLASH_SECTOR_SIZE))
+                                {
+
+                                    //FLASH_erase_4k_block(flash_address);
+                                    spi_flash_erase_4k_block(spi_flash_address);
+                                    //erase_count++;  // testing
+                                }
+
+                                /* added a delay to make sure that the erase is completed */
+                                delay(50);
+                                
+
+                                /* program the packet to the location specified */
+                                spi_flash_write(spi_flash_address, buf_ptr, packet_length);
+                                
+                                /* increment the spi_flash_address for next write */
+                                spi_flash_address += packet_length;
+                               // buf_ptr += packet_length;// no need to increment                               
+                                _putchar(ACK);
+                            }
+                        }
+
+                        ++packets_received;
+                    }  /* sequence number ok */
+                    break;
+                }
+                break;
+
+            default: /* timeout or error */
+                if(packets_received != 0)
+                {
+                    if(++errors >= MAX_ERRORS)
+                    {
+                        _putchar(CAN);
+                        _putchar(CAN);
+                        _sleep(1);
+
+                        /* Terminate transfer immediately */
+                        file_done    = 1;
+                        session_done = 1;
+                    }
+                }
+
+                if(0 == session_done)
+                {
+                    _putchar(CRC);
+                }
+                break;
+            }
+        }  /* receive packets */
+    }  /* receive files */
+
+    return(return_val == 1 ?  size : 0 );
+}
+
+
 
 #endif /* SF2BL_COMMS_OPTION == SF2BL_COMMS_YMODEM */

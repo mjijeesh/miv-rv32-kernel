@@ -134,19 +134,27 @@ void spi_flash_erase_sectors(uint32_t addr, uint32_t size){
 
      uint32_t  sector_addr = addr;
 
-     numb_4k_sectors = (size / (FLASH_SECTOR_SIZE)) + 1;
-     PRINT_TEXT("\r\n Number of sectors to be erased :  " );
-     PRINT_DNUM(numb_4k_sectors);
+     // Calculate number of 4KB sectors (round up)
+    // Formula: (size + (sector_size - 1)) / sector_size
+    uint32_t num_sectors = (size + 4095) / FLASH_SECTOR_SIZE;
+      if (num_sectors == 0) {
+          num_sectors = 1;
+        }
+
+
+     numb_4k_sectors = num_sectors ; //(size / (FLASH_SECTOR_SIZE)) + 1;
+     //PRINT_TEXT("\r\n Number of sectors to be erased :  " );
+     //PRINT_DNUM(numb_4k_sectors);
 
      FLASH_global_unprotect();
 
   for (i= 0 ; i < numb_4k_sectors ; i++ ){
-     PRINT_TEXT("\r\n Erasing Sector @ " );
-    PRINT_XNUM(sector_addr);
+    //PRINT_TEXT("\r\n Erasing Sector @ " );
+    //PRINT_XNUM(sector_addr);
 
     FLASH_erase_4k_block(addr);
 
-    PRINT_TEXT("\r\n Erasing Completed \r\n :");
+    //PRINT_TEXT("\r\n Erasing Completed \r\n :");
     delay_ms(500);
     sector_addr += FLASH_SECTOR_SIZE;
   }

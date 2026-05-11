@@ -30,7 +30,6 @@ spi_instance_t  g_spi_0;
 //timer_instance_t  g_timer_1;
 
 
-
 /* --- Configuration --- */
 #define MAX_FILES 15        
 #define NAME_LEN 32         
@@ -59,6 +58,7 @@ spi_instance_t  g_spi_0;
 
 uint32_t file_download(uint8_t * g_bin_base , uint8_t * file_name );
 uint32_t ymodem_receive(uint8_t *buf, uint32_t length, uint8_t *file_name, uint32_t memory_size);
+uint32_t ymodem_receive_flash(uint32_t flash_addr, uint32_t length, uint8_t *file_name, uint32_t memory_size);
 static uint32_t rx_app_file(uint8_t *dest_address);
 
 //uint8_t rcv_buff[32*1024*8];
@@ -130,6 +130,47 @@ void delay_ms(uint32_t ms) {
         __asm__ volatile ("wfi"); 
     }
 }
+
+
+/*------------------------------------------------------------------------------
+ * Call this function if you want to switch to another program.
+ */
+static void Bootloader_JumpToApplication(uint32_t reset_vector)
+{
+    __asm__ volatile ("fence.i");
+    __asm__ volatile("mv ra, a0");
+    __asm__ volatile("ret");
+
+    /*User application execution should now start and never return here.... */
+    __builtin_unreachable();
+}
+
+static void boot_app(uint32_t reset_vector)
+{
+    // 1. Flush instructions to ensure the CPU sees the newly downloaded code
+    __asm__ volatile ("fence.i");
+
+    // 2. Disable interrupts - critical to prevent the shell's ISRs from 
+    // firing while the new app is trying to set up its own state.
+    __asm__ volatile ("csrci mstatus, 8"); 
+
+    // 3. Perform the jump
+    // We use a "jr" (jump register) or "jalr" to the address in the variable.
+    __asm__ volatile (
+        "mv a0, %0\n"   // Move the C variable into register a0
+        "jr a0\n"       // Jump to the address held in a0
+        :
+        : "r" (reset_vector)
+        : "a0"
+    );
+
+    /* Code should never return here */
+    while(1);
+    __builtin_unreachable();
+}
+
+
+
 
 
 
@@ -209,6 +250,30 @@ void addDmesg(const char* msg) {
 }
 
 
+
+void print_system_info(void) {
+    uint32_t mhartid;
+    __asm__ volatile ("csrr %0, mhartid" : "=r"(mhartid));
+
+    printf("\r\n==================================================");
+    printf("\r\n      Mi-V RISC-V Embedded Shell v3.0");
+    printf("\r\n==================================================");
+    printf("\r\n CPU Hart ID      : %u", (unsigned int)mhartid);
+    printf("\r\n CPU Frequency    : %u MHz", (unsigned int)(SYS_CLK_FREQ / 1000000));
+    
+    printf("\r\n\n--- Peripheral Memory Map ---");
+    printf("\r\n UART0 Base       : 0x%08X", (unsigned int)COREUARTAPB0_BASE_ADDR);
+    printf("\r\n GPIO0 Base       : 0x%08X", (unsigned int)COREGPIO_BASE_ADDR);
+    printf("\r\n SPI0 Base        : 0x%08X", (unsigned int)CORESPI_BASE_ADDR);
+    
+    printf("\r\n\n--- Memory Regions ---");
+    printf("\r\n LSRAM Base (App) : 0x%08X (Size: %u KB)", 
+            LSRAM_BASE_ADDRESS_LOAD, (LSRAM_SIZE / 1024));
+    printf("\r\n Free Heap/Stack  : %u bytes", (unsigned int)freeMemory());
+    
+    printf("\r\n\n Build Date       : %s %s", __DATE__, __TIME__);
+    printf("\r\n==================================================\r\n");
+}
 
 
 
@@ -666,22 +731,70 @@ else if (strcmp(cmd, "whoami") == 0) {
 }
 
     else if (strcmp(cmd, "uname") == 0) {
-        printf("\r%-12s: %s\n", "Kernel", "KernelRISCV v1.0");
+        printf("\r%-12s: %s\n", "Kernel", "KernelRISCV v3.0");
         printf("\r%-12s: %s\n", "Architecture", "Mi-V RV32IM");
         printf("\r%-12s: %s\n", "Hardware", "Microchip Creative Board");
         printf("\r%-12s: %u bytes free\n", "RAM", (unsigned int)freeMemory());
         printf("\r%-12s: %s %s\n", "Build Date", __DATE__, __TIME__);
     }  
-    
+   
+#if 0
 else if (strcmp(cmd, "reboot") == 0) {
     printf("\rRebooting (Software)...\n");
     addDmesg("System reboot");
     delay(500);
     
-    // Jump to the reset vector (usually 0x80000000 for Microchip Mi-V)
-    void (*resetVector)() = (void (*)())0x80000000;
+    // Jump to the reset vector (usually 0x20000000 for Microchip Mi-V)
+    void (*resetVector)() = (void (*)())0x20000000;
     resetVector();
 }
+
+#endif 
+
+
+else if (strcmp(cmd, "reboot") == 0) {
+    printf("\rRebooting (Software)...\n");
+    addDmesg("System reboot");
+    
+    // 1. CRITICAL: Wait for the UART TX FIFO to be completely empty.
+    // Replace 'g_uart' with your UART instance name
+    //while (UART_get_rx_status(&g_uart)) 
+    //& UART_TX_BUSY); 
+
+    // 2. Clear out the stack/registers (Optional but safer)
+    __asm__ volatile ("fence.i");
+
+      
+    // 2. Give the terminal a moment to settle
+    delay(100);
+
+
+    //Bootloader_JumpToApplication((uint32_t)0x20000000); // jump to reset vector at 0x200000
+   
+    
+    // 3. Jump to the reset vector
+    void (*resetVector)() = (void (*)())0x20000000;
+    resetVector();
+}
+
+
+else if (strcmp(cmd, "run") == 0) {
+    printf("Booting from LSRAM...\n");
+    delay(100); // Give UART time to clear
+    boot_app(LSRAM_BASE_ADDRESS_LOAD);
+}
+
+else if (strcmp(cmd, "boot") == 0) {
+    printf("\rbooting application (Software)...\n");
+    addDmesg("System reboot");
+    delay(500);
+    
+    // Jump to the reset vector (usually 0x80000000 for Microchip Mi-V)
+    //void (*resetVector)() = (void (*)())0x80000000;
+    //resetVector();
+    Bootloader_JumpToApplication((uint32_t)LSRAM_BASE_ADDRESS_LOAD);
+}
+
 
 else if (strcmp(cmd, "panic") == 0) {
     printf("\rKERNEL PANIC: Manual Trigger\n");
@@ -717,11 +830,83 @@ else if (strcmp(cmd, "sh") == 0) {
     if (!found) printf("Script not found.\n");
 }
 
-#if 1
 
-else if (strcmp(cmd, "download") == 0)  {
+else if (strcmp(cmd, "download") == 0) {
+    uint32_t file_size;
+    static uint8_t file_name[FILE_NAME_LENGTH + 1];
+    uint32_t target_addr;
+    
+    // In this version, args[0] is treated directly as the address since 
+    
+    // 1. Determine Target Address
+    char* addrStr = strtok(args, " ");
+    if (addrStr != NULL) {
+        char *endptr;
+        target_addr = strtoul(addrStr, &endptr, 0);
+
+        // If endptr still points to the start of the string, no numbers were found
+        if (addrStr == endptr) {
+            printf("\rError: Invalid address '%s'.\n", addrStr);
+            printf("\r\nUsage: download  <addr> [(e.g. 4096, 0x1000)]\r\n");
+
+            return;
+        }
+    } else {
+        // No argument provided, use default
+        target_addr = LSRAM_BASE_ADDRESS_LOAD;
+    }
+
+    // 2. Find available File System slot
+    int foundSlot = -1;
+    for (int j = 0; j < MAX_FILES; j++) {
+        if (!fs[j].active) { 
+            foundSlot = j; 
+            break; 
+        }
+    }
+
+    if (foundSlot == -1) { 
+        printf("\rFS Full. Cannot register download.\n"); 
+        return; 
+    }
+
+    // 3. Initiate YMODEM Transfer
+    printf("\r\nReady for YMODEM transfer to RAM at 0x%08X...\n", (unsigned int)target_addr);
+    
+    // Assuming LSRAM_SIZE is your safe limit for the transfer
+    file_size = ymodem_receive((uint8_t*)target_addr, LSRAM_SIZE, file_name, LSRAM_SIZE);
+
+    // 4. Register in File System if transfer succeeded
+    if (file_size > 0) {
+        strncpy(fs[foundSlot].name, (char*)file_name, NAME_LEN - 1);
+        fs[foundSlot].name[NAME_LEN - 1] = '\0';
+        
+        strncpy(fs[foundSlot].parentDir, currentPath, PATH_LEN - 1);
+        fs[foundSlot].parentDir[PATH_LEN - 1] = '\0';
+
+        fs[foundSlot].isDirectory = 0;
+        fs[foundSlot].isExternal = 1;      // Points to volatile RAM
+        fs[foundSlot].ext_content = (uint8_t*)target_addr;
+        fs[foundSlot].fileSize = file_size;
+        fs[foundSlot].active = 1;
+        fs[foundSlot].content[0] = '\0';  // Clear internal buffer string
+
+        printf("\r\nFile '%s' (%u bytes) loaded to RAM at 0x%08X\n", 
+                file_name, (unsigned int)file_size, (unsigned int)target_addr);
+    } else {
+        printf("\r\nTransfer failed or timed out.\n");
+    }
+}
+
+
+#if 0
+
+else if (strcmp(cmd, "download2") == 0)  {
     uint32_t file_size;    
     static uint8_t file_name[FILE_NAME_LENGTH + 1]; /* +1 for nul */
+    // Get the first argument after "flash" (the subcommand)
+    char* cmd = strtok(line, " "); // this is needed to get the the  susequent strtok() to work
+    char* sub = strtok(NULL, " "); 
 
     uint8_t * load_addr;
 
@@ -739,10 +924,32 @@ else if (strcmp(cmd, "download") == 0)  {
         printf("No space.\n"); 
         return; 
     }
+   
+
+    if (sub == NULL) {
+        printf("Usage: download [ddr|flash <args>\r\n");
+        return;
+    }
+
+    if (strcmp(sub, "ddr") == 0)  {
 
     printf("\r\n Select the File to upload via ymodem\r\n");
-    //file_size = file_download(load_addr,file_name);
     file_size = ymodem_receive(load_addr, LSRAM_SIZE, file_name, LSRAM_SIZE) ; 
+
+    } else if (strcmp(sub, "flash") == 0) {
+        // Assume you have a function to read and print JEDEC ID
+    printf("\r\n Select the File to upload via ymodem\r\n");
+      file_size = ymodem_receive_flash(0x00000000, LSRAM_SIZE, file_name, LSRAM_SIZE) ; 
+  
+    } else {
+        printf("\rUnknown download command: %s\r\n", sub);
+        return;
+    }
+
+
+
+    
+   
 
     // 2. Initialize the metadata
     strncpy(fs[foundSlot].name, file_name, NAME_LEN - 1);
@@ -775,13 +982,42 @@ else if (strcmp(cmd, "flash") == 0) {
     char* cmd = strtok(line, " "); // this is needed to get the the  susequent strtok() to work
     char* sub = strtok(NULL, " "); 
 
+    
     if (sub == NULL) {
-        printf("Usage: flash [info|read|write|erase] <args>\r\n");
+        printf("Usage: flash [info|read|write|erase|download] <args>\r\n");
         return;
     }
 
-    // --- Sub-Command: INFO ---
-    if (strcmp(sub, "info") == 0) {
+    // --- Sub-Command: DOWNLOAD <addr> ---
+    if (strcmp(sub, "download") == 0) {
+        char* addrStr = strtok(NULL, " ");
+        static uint8_t file_name[FILE_NAME_LENGTH + 1];
+        uint32_t target_addr = (addrStr != NULL) ? strtoul(addrStr, NULL, 0) : 0x00000000;
+
+        printf("\r\nInitiating YMODEM transfer to Flash at 0x%08X...\n\r", (unsigned int)target_addr);
+        uint32_t file_size = ymodem_receive_flash(target_addr, LSRAM_SIZE, file_name, LSRAM_SIZE);
+
+        if (file_size > 0) {
+            // Find FS slot to register the flash-resident file
+            int foundSlot = -1;
+            for (int j = 0; j < MAX_FILES; j++) {
+                if (!fs[j].active) { foundSlot = j; break; }
+            }
+
+            if (foundSlot != -1) {
+                strncpy(fs[foundSlot].name, (char*)file_name, NAME_LEN - 1);
+                strncpy(fs[foundSlot].parentDir, currentPath, PATH_LEN - 1);
+                fs[foundSlot].isDirectory = 0;
+                fs[foundSlot].isExternal = 1;
+                fs[foundSlot].ext_content = (uint8_t*)target_addr;
+                fs[foundSlot].fileSize = file_size;
+                fs[foundSlot].active = 1;
+                printf("\r\nFile '%s' (%u bytes) registered at Flash 0x%08X\n", file_name, (unsigned int)target_addr, (unsigned int)file_size);
+            }
+        } else {
+            printf("\r\nFlash download failed.\n");
+        }
+    }else if (strcmp(sub, "info") == 0) {
         // Assume you have a function to read and print JEDEC ID
         //print_flash_details();
         spi_flash_device_info();
@@ -798,7 +1034,8 @@ else if (strcmp(cmd, "flash") == 0) {
             hex_view_spi_flash(addr, 4096);
         }
     }
-
+   
+    # if 0
     // --- Sub-Command: ERASE <addr> ---
     else if (strcmp(sub, "erase") == 0) {
         char* addrStr = strtok(NULL, " ");
@@ -811,6 +1048,50 @@ else if (strcmp(cmd, "flash") == 0) {
             printf("Done.\r\n");
         }
     }
+   #endif
+
+    // --- Sub-Command: ERASE <addr> [size] ---
+    // size can be raw bytes (4096) or include suffix (4k, 1m)
+    else if (strcmp(sub, "erase") == 0) {
+        char* addrStr = strtok(NULL, " ");
+        char* sizeStr = strtok(NULL, " "); 
+
+        if (!addrStr) {
+            printf("Usage: flash erase <addr> [size (e.g. 4096, 8k, 1m)]\r\n");
+        } else {
+            uint32_t addr = strtoul(addrStr, NULL, 0);
+            uint32_t requested_size = 4096; // Default to one 4KB sector
+            
+            if (sizeStr != NULL) {
+                char *endptr;
+                requested_size = strtoul(sizeStr, &endptr, 0);
+                
+                // Handle suffixes (k/K for Kilobytes, m/M for Megabytes)
+                if (*endptr == 'k' || *endptr == 'K') requested_size *= 1024;
+                else if (*endptr == 'm' || *endptr == 'M') requested_size *= (1024 * 1024);
+            }
+
+            // Calculate number of 4KB sectors (round up)
+            // Formula: (size + (sector_size - 1)) / sector_size
+            uint32_t num_sectors = (requested_size + 4095) / 4096;
+              if (num_sectors == 0) {
+                  num_sectors = 1;
+                }
+
+            uint32_t actual_erased_bytes = num_sectors * 4096;
+
+            printf("\rRequest: %u bytes. Erasing %u sector(s) (%u KB total) at 0x%08X...\r\n", 
+                   (unsigned int)requested_size, 
+                   (unsigned int)num_sectors, 
+                   (unsigned int)(actual_erased_bytes / 1024),
+                   (unsigned int)addr);
+            
+            spi_flash_erase_sectors(addr, requested_size);            
+            
+            printf("Done.\r\n");
+        }
+    }
+
 
     // --- Sub-Command: WRITE <addr> <data> ---
     else if (strcmp(sub, "write") == 0) {
@@ -833,15 +1114,55 @@ else if (strcmp(cmd, "flash") == 0) {
     }
 }
 
-
+ #if 0
   else if (strcmp(cmd,"help") == 0) {
-    printf("\r\nCommands: ls, cd, pwd, mkdir, touch, cat, echo, rm, info");
+    printf("\r\nCommands: ls, cd, pwd, mkdir, touch, download ,cat, echo, rm, info");
     printf("\r\n          pinmode, write, read, gpio, pwm, sh");
     printf("\r\n          uptime, uname, dmesg, df, free, whoami, clear, reboot");
     printf("\r\nGPIO: gpio [pin] on/off/toggle  |  gpio vixa [count]");
-    printf("\r\nSH:   sh [file]  -- run script (use ; as line separator)");
-    printf("\r\nYMODEM:   ymodem  ; Download file using ymodem protocol");
-  }  
+    printf("\r\nSH:   sh [file]  -- run script (use ; as line separator)");    
+  } 
+#endif
+  
+  
+  else if (strcmp(cmd, "help") == 0) {
+    printf("\r\n--- System Commands ---");
+    printf("\r\n  uptime        : Show system run time");
+    printf("\r\n  uname         : Show kernel and hardware info");
+    printf("\r\n  whoami        : Show current user and Hart ID");
+    printf("\r\n  free / df     : Show available RAM");
+    printf("\r\n  dmesg         : View kernel log messages");
+    printf("\r\n  clear         : Clear terminal screen");
+    printf("\r\n  reboot        : Software reset of the CPU");
+    
+    printf("\r\n\n--- File & Directory Commands ---");
+    printf("\r\n  ls            : List files in current directory");
+    printf("\r\n  cd [dir]      : Change directory (use '..' for parent)");
+    printf("\r\n  pwd           : Print working directory");
+    printf("\r\n  mkdir [name]  : Create a directory");
+    printf("\r\n  touch [name]  : Create an empty file");
+    printf("\r\n  rm [name]     : Remove file or directory");
+    printf("\r\n  cat [file]    : View file content");
+    printf("\r\n  echo [str] > [f] : Write text to file");
+    printf("\r\n  info [file]   : Show file metadata and address");
+    printf("\r\n  download [addr] : YMODEM transfer to lsram/ddr");
+    
+    printf("\r\n\n--- Flash Management ---");
+    printf("\r\n  flash info    : Display SPI Flash JEDEC ID");
+    printf("\r\n  flash read [addr] : Hex dump from flash address");
+    printf("\r\n  flash write [addr] [text] : Write text to flash");
+    printf("\r\n  flash erase [addr] [size] : Erase by size (e.g., 4k, 64k, 1m)");
+    printf("\r\n  flash download [addr]    : YMODEM transfer to flash");
+    
+    printf("\r\n\n--- Hardware & Scripting ---");
+    printf("\r\n  gpio [pin] [on|off|toggle] : Control GPIO pins");
+    printf("\r\n  gpio vixa [count]          : LED disco mode");
+    printf("\r\n  write [pin] [high|low]     : Direct pin set");
+    printf("\r\n  sh [file]     : Run script (lines separated by ';')");
+    printf("\r\n  run / boot    : Jump to application in LSRAM");
+    printf("\r\n");
+  }
+
   else {
     printf("\rUnknown command.");
   }
@@ -858,6 +1179,8 @@ int main()
 
     /* Configure SYTICK Timer for delay/tick functions */
     MRV_systick_config(SYS_CLK_FREQ/1000);
+
+    print_system_info();
 
    
     printf ( "\r\nInitialising Flash mmeory ");

@@ -592,7 +592,7 @@ else if (strcmp(cmd, "whoami") == 0) {
 }
 
     else if (strcmp(cmd, "uname") == 0) {
-        printf("\r%-12s: %s\n", "Kernel", "KernelRISCV v1.0");
+        printf("\r%-12s: %s\n", "Kernel", "KernelRISCV v0.0");
         printf("\r%-12s: %s\n", "Architecture", "Mi-V RV32IM");
         printf("\r%-12s: %s\n", "Hardware", "Microchip Creative Board");
         printf("\r%-12s: %u bytes free\n", "RAM", (unsigned int)freeMemory());

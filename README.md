@@ -1,8 +1,104 @@
 ## KernelRISCV v3
 ---------------------------
 
+.
+### What is new 
 
-TODO: Trying to add the file system support for ymodem downlaoded file.
+1. added `flash download` command to download a file directly to spi flash ( ymodem) with option of specifying the target adress
+2. `download` command to download a file via ymodem to lsram/ssr memory  
+3. modified the help command output.
+4. `flash erase` command updated to support number of bytes to erase.
+5. 
+
+```
+root@rv32:/# 
+==================================================
+      Mi-V RISC-V Embedded Shell v3.0
+==================================================
+ CPU Hart ID      : 0
+ CPU Frequency    : 50 MHz
+
+--- Peripheral Memory Map ---
+ UART0 Base       : 0x71000000
+ GPIO0 Base       : 0x75000000
+ SPI0 Base        : 0x76000000
+
+--- Memory Regions ---
+ LSRAM Base (App) : 0x80000000 (Size: 128 KB)
+ Free Heap/Stack  : 5008 bytes
+
+ Build Date       : May 11 2026 14:25:49
+==================================================
+
+Initialising Flash mmeory 
+Configuring the SPI Flash....
+Found SPI Flash ....
+Device ID    :0x00000026
+ManfactureID :0x000000BF
+SPI Flash Configuration -------OK
+Initialising File System 
+root@rv32:/# help
+
+--- System Commands ---
+  uptime        : Show system run time
+  uname         : Show kernel and hardware info
+  whoami        : Show current user and Hart ID
+  free / df     : Show available RAM
+  dmesg         : View kernel log messages
+  clear         : Clear terminal screen
+  reboot        : Software reset of the CPU
+
+--- File & Directory Commands ---
+  ls            : List files in current directory
+  cd [dir]      : Change directory (use '..' for parent)
+  pwd           : Print working directory
+  mkdir [name]  : Create a directory
+  touch [name]  : Create an empty file
+  rm [name]     : Remove file or directory
+  cat [file]    : View file content
+  echo [str] > [f] : Write text to file
+  info [file]   : Show file metadata and address
+  download [addr] : YMODEM transfer to lsram/ddr
+
+--- Flash Management ---
+  flash info    : Display SPI Flash JEDEC ID
+  flash read [addr] : Hex dump from flash address
+  flash write [addr] [text] : Write text to flash
+  flash erase [addr] [size] : Erase by size (e.g., 4k, 64k, 1m)
+  flash download [addr]    : YMODEM transfer to flash
+
+--- Hardware & Scripting ---
+  gpio [pin] [on|off|toggle] : Control GPIO pins
+  gpio vixa [count]          : LED disco mode
+  write [pin] [high|low]     : Direct pin set
+  sh [file]     : Run script (lines separated by ';')
+  run / boot    : Jump to application in LSRAM
+
+root@rv32:/#
+
+
+root@rv32:/# flash erase 0x00 8k
+Request: 8192 bytes. Erasing 2 sector(s) (8 KB total) at 0x00000000...
+Done.
+
+root@rv32:/# 
+
+## Flash download Command
+
+root@rv32:/# flash download
+
+Initiating YMODEM transfer to Flash at 0x00000000...
+CCCCCC
+
+## lsram/ddr fiel downlaod command 
+root@rv32:/# download
+
+Initiating YMODEM transfer to Flash at 0x80000000...
+CCCCCC
+
+
+
+````
 
 
 ## KernelRISCV v2
