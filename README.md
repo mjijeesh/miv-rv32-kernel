@@ -1,3 +1,103 @@
+## KernelRISCV v4
+
+### New Features
+
+1. Added the `read` command. this is used to read  any memory location in the soc. this can be extended to support read gpio/uart/spi peripherals
+2. added support for serialboot downlaod program. This makes use of the `litex_term.py` file. This file is stripped of with the litex related libraries. so can be run without litex environement
+
+
+
+
+When using the `litex_term`  start teh terminal like below 
+
+```
+[jijeesh@localhost]~/% python litex_term.py  /dev/ttyUSB1 --kernel ./application/rv32-kernel-v3/build/rv32-kernel-v3.bin --safe
+```
+
+--safe  : This switch is used to reduce the frame size i nthe transfer, current implmentation works only with --safe switch.
+
+--kernel : this switch is needed to specify the bin fiel for the serialbot
+
+/dev/ttyUSB1 : specify your serial port here
+
+
+
+### serilboot command
+
+```
+root@rv32:/# serialboot
+Booting from Serial ...
+Booting from serial...
+Press Q or ESC to abort boot completely.
+sL5DdSMmkekro
+[LITEX-TERM] Received firmware download request from the device.
+[LITEX-TERM] Uploading ./application/rv32-kernel-v3/build/rv32-kernel-v3.bin to 0x40000000 (49008 bytes)...
+[LITEX-TERM] Upload complete (3.6KB/s).
+[LITEX-TERM] Booting the device.
+[LITEX-TERM] Done.
+
+root@rv32:/# 
+
+
+
+```
+
+if the terminal is used without the serialboot option
+
+```
+[jijeesh@localhost]~/% python litex_term.py  /dev/ttyUSB1 
+```
+
+Now this will works liek any regular terminal.
+
+ALways use  two contnous CtRL-C to exit the terminal.
+
+
+### read mem command
+
+```
+
+root@rv32:/# read mem
+Usage: ream mem <addr> <size> [b|w]
+
+`root@rv32:/# read mem 0x80000000`
+
+Examining 1 words at 0x80000000:
+0x80000000:   0x00000000
+
+
+
+`root@rv32:/# read mem 0x80000000 32 b`
+
+Examining 32 bytes at 0x80000000:
+0x80000000:   0x00  0x00  0x00  0x00  0x00  0x00  0x00  0x00
+0x80000008:   0x00  0x00  0x00  0x00  0x00  0x00  0x00  0x00
+0x80000010:   0x00  0x00  0x00  0x00  0x00  0x00  0x00  0x00
+0x80000018:   0x00  0x00  0x00  0x00  0x00  0x00  0x00  0x00
+
+`root@rv32:/# read mem 0x80000000 32 w`
+
+Examining 32 words at 0x80000000:
+0x80000000:   0x00000000  0x00000000  0x00000000  0x00000000
+0x80000010:   0x00000000  0x00000000  0x00000000  0x00000000
+0x80000020:   0x00000000  0x00000000  0x00000000  0x00000000
+0x80000030:   0x00000000  0x00000000  0x00000000  0x00000000
+0x80000040:   0x84CDBD09  0xA4844DDB  0x24940064  0x21217343
+0x80000050:   0xA75CCDBE  0x9125942D  0x17648502  0xA52A2D25
+0x80000060:   0xFDA44781  0x75C58D8F  0x21EDA527  0x95BFAAA0
+0x80000070:   0xE521B5A6  0x89AFB4AD  0xF101A5AD  0x8721B702
+
+root@rv32:/# 
+
+
+```
+
+
+
+
+ 12th May 2026
+
+
 ## KernelRISCV v3
 ---------------------------
 
