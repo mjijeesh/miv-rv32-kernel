@@ -71,4 +71,8 @@ void hex_view_spi_flash(uint32_t flash_addr, uint32_t size);
 void print_hex_line_notext( uint32_t addr, uint8_t *value);
 void hex_buffer_compare( uint8_t *buffer1 , uint8_t *buffer2, uint32_t size);
 
+
+#define hexdump(x, y, z) hex_view_buffer(x, y, z)
+#define hexdumpflash(x, y) hex_view_spi_flash(x, y)
+
 #endif /* SRC_MISC_H_ */

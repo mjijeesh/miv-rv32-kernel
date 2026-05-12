@@ -585,5 +585,7 @@ block_copy_error:
 
 block_copy_exit:
     ret
+boot_helper:
+	jr x13
 
 #endif /*ENTRY_S*/
