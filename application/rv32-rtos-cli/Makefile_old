@@ -1,0 +1,52 @@
+
+APP_NAME     ?= rv32-freertos-cli
+TARGET       ?=$(APP_NAME)
+TARGET_BOARD ?= polarfire-eval-kit
+APP_HOME     ?= .
+RV32_HOME    ?= ../..
+
+
+LDFILE    ?= $(RV32_HOME)/boards/$(TARGET_BOARD)/platform_config/linker/miv-rv32-ram.ld
+
+
+USER_FLAGS ?= -D PF_EVAL_KIT \
+			  -D SYS_CLK_FREQ=83000000
+              
+
+# user flags needed for freertos 
+USER_FLAGS += -D USE_FREERTOS \
+			  -D FREERTOS_DEMO_FULL \
+			  -D FREERTOS_PLUS_CLI
+#------------------------------------------------------------
+# Application Source Files
+#------------------------------------------------------------
+       
+
+C_SRCS += $(APP_HOME)/main.c \
+          $(APP_HOME)/blinky_demo/main_blinky.c \
+          $(APP_HOME)/full_demo/main_full.c \
+          $(APP_HOME)/full_demo/RunTimeStatsTimer.c \
+          $(APP_HOME)/full_demo/ParTest.c
+          
+ASM_SRCS += $(APP_HOME)/full_demo/RegTest.S
+
+
+C_SRCS += $(APP_HOME)/full_demo/UARTCommandConsole.c
+C_SRCS += $(APP_HOME)/full_demo/Sample-CLI-commands.c
+
+# uart_function for stdio
+C_SRCS +=  $(RV32_HOME)/middleware/stdio/uart_stdio.c	
+C_SRCS +=  $(RV32_HOME)/middleware/stdio/neorv32_stdio.c	
+
+
+
+
+INCS += -I $(APP_HOME)
+INCS += -I $(APP_HOME)/blinky_demo \
+        -I $(APP_HOME)/full_demo
+
+#INCS   += -I $(RTOS_HOME)/FreeRTOS-Plus/Source/FreeRTOS-Plus-CLI
+		     
+
+-include $(RV32_HOME)/common/common.mk	
+

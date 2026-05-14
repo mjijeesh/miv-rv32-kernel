@@ -1,3 +1,45 @@
+
+
+
+Note : for the freertos looks like a 256kb rma /rom is needed.
+
+Note: for running ymodem on m2s-creative, running from ddr doesnt work. running from esram works though.
+
+
+chnaged build flags
+
+CFLAGS	  += -march=rv32imc -mabi=ilp32 $(DEBUG_FLAG) $(OPT_FLAG) -std=gnu11
+
+LDFLAGS   += -march=rv32imc -mabi=ilp32 $(DEBUG_FLAG) $(OPT_FLAG)
+
+-march=rv32imc  instead of -march=rv32i , this resulted in reduction in code size. need to change back if there any issue .
+
+added the build option in the main makefile for debug/release
+
+provide BUILD=RELEASE for building for release mode, and BUILD=DEBUG for debug mode.
+default is for DEBUG
+
+
+# Conditional Logic for Compiler Flags
+ifeq ($(BUILD), DEBUG)
+    # Debug-specific flags
+    CFLAGS += -g3 -O0
+    $(info [BUILD] Configuring for Debug mode (-g3 -O0))
+else
+    # Default/Release-specific flags
+    CFLAGS += -g -Os
+    $(info [BUILD] Configuring for Release mode (-g -Os))
+endif
+
+
+```
+e.g
+make clean all BOARD=polarfire-eval-kit  TARGET=rv32-rtos-demo BUILD=release
+
+```
+
+
+
 ## KernelRISCV v5
 
 ### New Features

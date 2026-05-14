@@ -160,7 +160,7 @@ DEBUG_FLAG ?= -g3
 
 #-------------------- Compile and Linking options -----------------------------#
 # C Source compile options
-CFLAGS	  += -march=rv32i -mabi=ilp32 $(DEBUG_FLAG) $(OPT_FLAG) -std=gnu11
+CFLAGS	  += -march=rv32imc -mabi=ilp32 $(DEBUG_FLAG) $(OPT_FLAG) -std=gnu11
 CFLAGS    += --specs=nano.specs
 CFLAGS    += -mcmodel=medany 
 CFLAGS    += -msmall-data-limit=8  
@@ -170,8 +170,9 @@ CFLAGS	  += -fmessage-length=0 -fsigned-char -fdata-sections -ffunction-sections
 # Linking options 
 LDFILE    ?= boards/$(TARGET_BOARD)/platform_config/linker/miv-rv32-ram.ld
 
-LDFLAGS   += -march=rv32i -mabi=ilp32 $(DEBUG_FLAG) $(OPT_FLAG)
+LDFLAGS   += -march=rv32imc -mabi=ilp32 $(DEBUG_FLAG) $(OPT_FLAG)
 LDFLAGS   += -mcmodel=medany
+LDFLAGS   += --specs=nosys.specs
 LDFLAGS   += -msmall-data-limit=8
 LDFLAGS   += -mstrict-align -mno-save-restore 
 LDFLAGS   += -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections 
@@ -187,6 +188,11 @@ ASM_FLAGS += -mcmodel=medany
 ASM_FLAGS += -msmall-data-limit=8
 ASM_FLAGS += -mstrict-align -mno-save-restore 
 ASM_FLAGS += -fmessage-length=0 -fsigned-char -fdata-sections -ffunction-sections 
+
+#object gen flags for hex file
+
+OBJ_FLAGS ?= 
+#OBJ_FLAGS += --change-section-lma *-0x80000000
 
 
 
@@ -235,9 +241,11 @@ include platform/config/gdb.mk
 
 
 #$ add (OBJS)  below to get individual module size
-size:  $(APP_ELF)
+sizeb:  $(APP_ELF)
 	$(SIZE) --format=berkeley $^
-
+size:  $(APP_ELF)
+	$(SIZE) --format=sysv --totals --radix=16 $^
+	$(SIZE) --format=berkeley $^
 
 $(APP_SYM): $(APP_ELF)
 	$(ECHO) " NM        $@"
@@ -250,7 +258,7 @@ $(APP_LST):$(APP_ELF)
 
 $(APP_HEX): $(APP_ELF)
 	$(ECHO) " OBJCOPY   $@"
-	@$(OBJCOPY) -O ihex $< $@
+	@$(OBJCOPY) -O ihex $(OBJ_FLAGS) $< $@
 
 $(APP_BIN): $(APP_ELF)
 	$(ECHO) " OBJCOPY   $@"

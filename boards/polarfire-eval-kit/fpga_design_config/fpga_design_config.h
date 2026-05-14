@@ -100,9 +100,7 @@
 #define CORETIMER1_BASE_ADDR            MIV_ESS_APBSLOT4_BASE_ADDR
 
 
-
-//#define COREGPIO_OUT_BASE_ADDR          0x60005000UL
-#define COREGPIO_OUT_BASE_ADDR          0x60002000UL
+#define COREGPIO_OUT_BASE_ADDR              0x75000000UL
 
 
 #define TSEMAC_BASE                     0x70000000UL

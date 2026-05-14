@@ -90,6 +90,10 @@
 #define CONFIG_USE_MICROCHIP_SST26VF
 
 
+
+#define COREGPIO_OUT_BASE_ADDR              0x75000000UL
+
+
 //#define USE_SPI_FLASH  1
 
 //#define USE_MICROCHIP_SST26VF
