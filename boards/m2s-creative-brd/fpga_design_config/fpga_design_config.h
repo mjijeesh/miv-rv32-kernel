@@ -47,6 +47,9 @@
 #define FPGA_DESIGN_CONFIG_H_
 
 
+#define BOARD_NAME    "Microchip Creative Board"
+
+
 /***************************************************************************//**
  * Soft-processor clock definition
  * This is the only clock brought over from the Mi-V Soft processor Libero design.

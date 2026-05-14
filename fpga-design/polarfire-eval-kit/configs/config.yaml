@@ -1,0 +1,8 @@
+libero_params:
+  config: "CFG2"
+  design_flow: "SYNTHESIZE"
+  hw_platform: "PF_EVAL"
+  die_type: "PS"
+  script_path: "./MIV_RV32_BaseDesign.tcl"
+
+

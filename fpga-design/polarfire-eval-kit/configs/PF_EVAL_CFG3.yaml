@@ -1,0 +1,6 @@
+libero_params:
+  config: "CFG3"
+  design_flow: "GENERATE_BITSTREAM"
+  hw_platform: "M2S_CREATIVE"
+  die_type: "PS"
+  script_path: "./MIV_RV32_BaseDesign.tcl"

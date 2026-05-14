@@ -4,7 +4,7 @@
 $(info BOARD      = MPF-EVAL-BRD)
 
 
-BOARD_DIR= boards/polarfire-eval-kit/miv-rv32-design
+BOARD_DIR= boards/polarfire-eval-kit
 
 # set the device partnumer for openocd
 M2S_DEVICE = M2S025

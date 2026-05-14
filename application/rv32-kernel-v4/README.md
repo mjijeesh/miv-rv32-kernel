@@ -21,6 +21,27 @@ When using the `litex_term`  start teh terminal like below
 /dev/ttyUSB1 : specify your serial port here
 
 
+
+### serilboot command
+
+```
+root@rv32:/# serialboot
+Booting from Serial ...
+Booting from serial...
+Press Q or ESC to abort boot completely.
+sL5DdSMmkekro
+[LITEX-TERM] Received firmware download request from the device.
+[LITEX-TERM] Uploading ./application/rv32-kernel-v3/build/rv32-kernel-v3.bin to 0x40000000 (49008 bytes)...
+[LITEX-TERM] Upload complete (3.6KB/s).
+[LITEX-TERM] Booting the device.
+[LITEX-TERM] Done.
+
+root@rv32:/# 
+
+
+
+```
+
 if the terminal is used without the serialboot option
 
 ```
@@ -32,7 +53,7 @@ Now this will works liek any regular terminal.
 ALways use  two contnous CtRL-C to exit the terminal.
 
 
- 12th May 2026 
+### read mem command
 
 ```
 
@@ -70,6 +91,14 @@ root@rv32:/#
 
 
 ```
+
+
+
+
+ 12th May 2026
+
+
+
 
 
 ## KernelRISCV v3

@@ -1,0 +1,10 @@
+set_io -port_name RX  \
+    -pin_name H18     \
+    -fixed true       \
+    -DIRECTION INPUT
+
+
+set_io -port_name TX   \
+    -pin_name G17      \
+    -fixed true        \
+    -DIRECTION OUTPUT

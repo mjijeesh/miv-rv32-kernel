@@ -4,13 +4,13 @@
 #TARGET       ?= rv32-coretimer-irq
 #TARGET        ?= uartcli
 #TARGET        ?= rv32-kernel-v0
-TARGET        ?= rv32-kernel-v4
+TARGET        ?= rv32-kernel-v5
 
 #-----------------------------------------------------
 #select one of the board from the below list available 
 #-----------------------------------------------------
-BOARD     ?= m2s-creative-brd
-#BOARD    ?= polarfire-eval-kit
+#BOARD     ?= m2s-creative-brd
+BOARD    ?= polarfire-eval-kit
 #BOARD    ?= m2s-security-kit
 
 

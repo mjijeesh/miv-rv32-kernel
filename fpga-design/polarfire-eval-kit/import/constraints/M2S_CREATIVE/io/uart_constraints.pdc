@@ -1,0 +1,12 @@
+set_io RX             \
+    -pinname H3       \
+    -fixed yes        \
+     -iostd LVTTL      \
+    -DIRECTION INPUT
+
+
+set_io TX              \
+    -pinname G3        \
+    -fixed yes         \
+     -iostd LVTTL      \
+    -DIRECTION OUTPUT

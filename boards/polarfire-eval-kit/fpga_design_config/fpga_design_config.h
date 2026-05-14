@@ -52,6 +52,9 @@
 #endif
 
 
+#define BOARD_NAME    "Microchip PolarFire Eval Kit"
+
+
 /***************************************************************************//**
  * Soft-processor clock definition
  * This is the only clock brought over from the Mi-V Libero design.
@@ -61,7 +64,7 @@
 #endif
 
 
-#define MSCC_STDIO_THRU_CORE_UART_APB
+//#define MSCC_STDIO_THRU_CORE_UART_APB
 /***************************************************************************//**
  * Peripheral base addresses.
  * Format of define is:
@@ -111,6 +114,8 @@
 
 #define TSE_IRQn                        MRV32_EXT_IRQn
 #define TIMER0_IRQn                     MRV32_MSYS_EIE0_IRQn
+
+
 
 
 

@@ -1,3 +1,17 @@
+## KernelRISCV v5
+
+### New Features
+
+1.Added support for Polarfire Eval Kit .  Use the design CFG1 or CFG2
+2. Modified the Board/Kernel Printing to use a defien in board config file.
+   
+
+
+
+14th May 2026
+
+
+
 ## KernelRISCV v4
 
 ### New Features

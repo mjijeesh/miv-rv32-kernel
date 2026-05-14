@@ -1,0 +1,37 @@
+#--- 64 Mbit Serial Flash I/O --------------------------------------------------
+
+set_io FLASH_SCK        \
+	-pinname J14          \
+	-fixed true           \
+    -iostd LVCMOS33       \
+	-DIRECTION OUTPUT
+
+set_io FLASH_SDI        \
+	-pinname J13          \
+	-fixed true           \
+  -iostd LVCMOS33       \
+	-DIRECTION INPUT
+
+set_io FLASH_SDO        \
+	-pinname K12          \
+	-fixed true           \
+    -iostd LVCMOS33       \
+	-DIRECTION OUTPUT
+  
+set_io FLASH_SS         \
+	-pinname J12          \
+	-fixed true           \
+  -iostd LVCMOS33       \
+	-DIRECTION OUTPUT
+
+set_io FLASH_HOLDn      \
+	-pinname G16          \
+	-fixed true           \
+    -iostd LVCMOS33       \
+	-DIRECTION OUTPUT
+
+set_io FLASH_WPn        \
+	-pinname H14          \
+	-fixed true           \
+  -iostd LVCMOS33       \
+	-DIRECTION OUTPUT

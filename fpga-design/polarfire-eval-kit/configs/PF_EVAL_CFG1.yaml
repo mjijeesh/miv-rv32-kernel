@@ -1,0 +1,8 @@
+libero_params:
+  config: "CFG1"
+  design_flow: "GENERATE_BITSTREAM"
+  hw_platform: "PF_EVAL"
+  die_type: "PS"
+  script_path: "./MIV_RV32_BaseDesign.tcl"
+
+
