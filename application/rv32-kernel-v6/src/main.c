@@ -23,7 +23,7 @@
 
 
 
-#define KERNELVERSION   "KernelRISCV v5.0"
+#define KERNELVERSION   "KernelRISCV v6.0"
 
 
 UART_instance_t g_uart;

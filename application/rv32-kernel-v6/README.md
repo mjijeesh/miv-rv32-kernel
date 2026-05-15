@@ -1,4 +1,3 @@
-
 ## KernelRISCV v6
 
 Whats New:
@@ -22,7 +21,7 @@ tested on both m2s-creative-brd and poalrfire-eval board.
 
 ### Compile switches
 
-changed the architecture to use the `M` and `C` instruction set ( `-march=rv32imc`) , previously only `I` ( `-march=rv32i` was used.
+changed the architecture to use the `M` and `C` instruction set ( `-march=rv32imc`) , previously only `I` ( `-march=rv32i`) was used.
 This reduces code size. Make sure that teh RV32 hardware is configured to incude `C` and `M` options. if  they are not enabled, change back to original settings.
 
 ```
@@ -107,6 +106,15 @@ endif
 15th May 2026
 
 
+
+
+## SPIFLASH 
+
+Whats new :  modified the spi flash  read command output format.
+
+14th May 2026
+
+
 ## KernelRISCV v5
 
 ### New Features
@@ -118,7 +126,6 @@ endif
 
 
 14th May 2026
-
 
 
 ## KernelRISCV v4
@@ -221,11 +228,14 @@ root@rv32:/#
  12th May 2026
 
 
+
+
+
 ## KernelRISCV v3
 ---------------------------
 
 .
-### What is new 
+What is new 
 
 1. added `flash download` command to download a file directly to spi flash ( ymodem) with option of specifying the target adress
 2. `download` command to download a file via ymodem to lsram/ssr memory  
@@ -323,6 +333,42 @@ CCCCCC
 
 ````
 
+```
+root@rv32:/# help                                                                                                                               
+                                                                                                                                                
+Commands: ls, cd, pwd, mkdir, touch, cat, echo, rm, info                                                                                        
+          pinmode, write, read, gpio, pwm, sh                                                                                                   
+          uptime, uname, dmesg, df, free, whoami, clear, reboot ,download                                                                              
+GPIO: gpio [pin] on/off/toggle  |  gpio vixa [count]                                                                                            
+SH:   sh [file]  -- run script (use ; as line separator)                                                                                        
+
+root@rv32:/# download                                                                                                                           
+                                                                                                                                                
+ Select the File to upload via ymodem                                                                                                           
+C4857 bytes) registered in FS.                                                                                                                  
+OK.                                                                                                                                             
+                                                                                                                                                
+root@rv32:/# ls                                                                                                                                 
+home/  dev/    rv32-kernel-v3.hex                                                                                                               
+                                                                                                                                                
+root@rv32:/# info rv32-kernel-v3.hex                                                                                                            
+Name: rv32-kernel-v3.hex                                                                                                                        
+Type: File                                                                                                                                      
+File address: 0x80000000                                                                                                                        
+                                                                                      
+root@rv32:/# uptime                                                                                                                             
+up 0h 2m 15s                                                                                                                                    
+                                                                                                                                                
+root@rv32:/# df                                                                                                                                 
+Free RAM: 4528 bytes                                                                                                                            
+                                                                                                                                                
+root@rv32:/# free                                                                                                                               
+Free RAM: 4528 bytes                                                                                                                            
+                                                                                                                                                
+root@rv32:/#                  
+
+
+```
 
 ## KernelRISCV v2
 ---------------------------
@@ -335,7 +381,7 @@ V2 of the kernel :
   Download a file using ymodem  protocol. The file will be downlaoded into the  LSRAM/DDR memory ara at 0x80000000
 
 
-## FPGA Hardware
+### Hardware
 
   This uses a new hardware design. The RV32 core has been modified to use only a single AHB interface with memory map as beow 
   ```
@@ -352,8 +398,6 @@ V2 of the kernel :
   This also needs a new linker file.
   `miv-rv32-esram.ld`
 
-
-
   ```
 
     MEMORY
@@ -368,17 +412,6 @@ V2 of the kernel :
 
 
   ```
-### Buildign FPGA Hardware
-
-The fpga hardware building scripts are available in the `fpga-design/creative-brd/` folder
-it uses a mix of python and the tcl scripts to generate the libero projects
-
-use the below command to generate teh `CFG3` project for the YMDOEM supported hardware
-```
-$python3 build_gateware ./configs/config_CREATIVE_CFG3.yaml
-
-```
-
 
 ### Running the `ymodem' command
 
@@ -405,11 +438,7 @@ File Transfer Completed.
 
 end of update 
 7th April 2026
-
-
-## KernelRISCV v1.1
----------------------------
-
+-----------------------------------------------------------------------------------------------------------------------------------------
 
 v1 of kernel. Added support for spi flash.
 
@@ -692,127 +721,3 @@ KERNEL PANIC: Manual Trigger
 
 
 1st may 2026
-
-
-
-
-##  KernelRISCV  V1.0
-
-**- Libero       : v2025.1**
-**- Softconsole  : v2022.2**
-
-
-
-This Demo example implments a Kernel for MIV-RV32 .
-This is trying to mimic the functionality of the "KernelUNO" which is done for Arduino.
-
-# Building Demo
-
-Use the make command with apropritate Parameter to build and run the examples.
-
-```shell
-$ make  BOARD=m2s-creative-brd TARGET= v32-kernel-v0  clean all
-```
-
-
-### Build Commands
-```bash
-# Build the "rv32-systick" example for the m2s-creative-brd (default)
-$ make  TARGET=v32-kernel-v0  clean all
-```
-
-This will  build the  "32-kernel-v0"  example. targettign the  m2s-creative-brd.
-
-by default the BOARD = m2s-creative-brd, so we can skip that argument.
-
-```shell
-$ make TARGET= 32-kernel-v0 clean all  
-```
-
-The above will run the coretimer-irq example
-
-
-Change the TARGET parameter to run different examples. or use modify inside the Makefile 
-
-
-# Running openocd Server
-```
-$ make  openocd 
-```
-
-This will launch the opencd server for debug. Run it on a different terminal and keep it running
-
-
-### Debugging the Application
-```
-$ make  debug
-```
-
-This is will load the elf file 
-
-use "cont" comamnd to run further
-
-
-
-```
-
-                                                             
-Initialising RV32 Kernel                                                        
-root@rv32:/# uname                                                              
-Kernel      : KernelRISCV v1.0                                                  
-Architecture: Mi-V RV32IM                                                       
-Hardware    : Microchip Creative Board                                          
-RAM         : 131584 bytes free                                                 
-Build Date  : May  1 2026 17:08:56                                              
-                                                                                
-root@rv32:/# uptime                                                             
-up 0h 0m 5s                                                                     
-                                                                                
-root@rv32:/# 
-
-
-root@rv32:/# help                                                               
-                                                                                
-Commands: ls, cd, pwd, mkdir, touch, cat, echo, rm, info                        
-          pinmode, write, read, gpio, pwm, sh                                   
-          uptime, uname, dmesg, df, free, whoami, clear, reboot                 
-GPIO: gpio [pin] on/off/toggle  |  gpio vixa [count]                            
-SH:   sh [file]  -- run script (use ; as line separator)                        
-root@rv32:/# 
-
-
-root@rv32:/# gpio                                                               
-                                                                                
-Usage: gpio [pin] [on/off] OR gpio vixa [count]                                 
-root@rv32:/# gpio 1 on                                                          
-GPIO 1 ON                                                                       
-root@rv32:/# gpio 0 on                                                          
-GPIO 0 ON                                                                       
-root@rv32:/# gpio vixa 20                                                       
-LED DISCO MODE!                                                                 
-Disco finished!                                                                 
-root@rv32:/# 
-
-
-root@rv32:/# pwd                                                                
-/                                                                               
-                                                                                
-root@rv32:/# ls                                                                 
-home/  dev/                                                                     
-                                                                                
-root@rv32:/# mkdir test                                                         
-OK.                                                                             
-                                                                                
-root@rv32:/# ls                                                                 
-home/  dev/  test/                                                              
-                                                                                
-root@rv32:/# 
-
-root@rv32:/# reboot                                                             
-Rebooting (Software)...                                                         
-                                                                                
-root@rv32:/# panic                                                              
-KERNEL PANIC: Manual Trigger 
-
-```
-

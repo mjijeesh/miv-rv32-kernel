@@ -31,10 +31,22 @@ CONFIG_USE_YMODEM                = N
 #CONFIG_USE_MSS_UART_PRINT      = Y
 #CONFIG_USE_STDIO_MMUART        = Y
 
+# Conditional Logic for the default linker file selection
+ifeq ($(BOARD), m2s-creative-brd)
+    # use esram.ld for m2s-creative board 
+    LDFILE      = boards/$(BOARD)/platform_config/linker/miv-rv32-esram.ld
+    $(info [BUILD]  Using esram ld fiel for m2s creative board)
+else
+    # Default/Release-specific flags
+    LDFILE      = boards/$(BOARD)/platform_config/linker/miv-rv32-ram.ld
+    $(info [BUILD] Default linker fiel used )
+endif
+
+
 #-----------------------------------------------------
 # Use the below Option to use a custom linker file
 #-----------------------------------------------------
-LDFILE      = boards/$(BOARD)/platform_config/linker/miv-rv32-esram.ld
+#LDFILE      = boards/$(BOARD)/platform_config/linker/miv-rv32-esram.ld
 
 #-----------------------------------------------------
 #  By default the build will be for -O0 and -g3,

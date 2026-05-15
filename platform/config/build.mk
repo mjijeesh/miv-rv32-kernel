@@ -183,7 +183,7 @@ LDFLAGS	  += -Xlinker --gc-sections -nostartfiles --specs=nano.specs
 # assembly files  compile options
 
 
-ASM_FLAGS += -march=rv32i -mabi=ilp32 $(OPT_FLAG)  $(DEBUG_FLAG) -x assembler-with-cpp
+ASM_FLAGS += -march=rv32imc -mabi=ilp32 $(OPT_FLAG)  $(DEBUG_FLAG) -x assembler-with-cpp
 ASM_FLAGS += -mcmodel=medany 
 ASM_FLAGS += -msmall-data-limit=8
 ASM_FLAGS += -mstrict-align -mno-save-restore 

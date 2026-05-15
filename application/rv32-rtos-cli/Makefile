@@ -8,12 +8,25 @@ BINDIR           := $(APP_HOME)/build
 #RV32_HOME    ?= .
 
 
+# Conditional Logic for the default linker file selection
+ifeq ($(BOARD), m2s-creative-brd)
+    # use esram.ld for m2s-creative board 
+    LDFILE      = boards/$(BOARD)/platform_config/linker/miv-rv32-esram.ld
+    $(info [BUILD]  Using esram ld fiel for m2s creative board)
+else
+    # Default/Release-specific flags
+    LDFILE      = boards/$(BOARD)/platform_config/linker/miv-rv32-ram.ld
+    $(info [BUILD] Default linker fiel used )
+endif
+
+
+
 #-----------------------------------------------------
 # Use the below Option to use a custom linker file
 # for running freertos, make sure the linker fiel has the __freertos_irq_stack_top = .;  defined
 #  at the end of stack
 #-----------------------------------------------------
-#LDFILE      ?= boards/$(BOARD)/platform_config/linker/miv-rv32-ram-freertos.ld
+LDFILE      ?= boards/$(BOARD)/platform_config/linker/miv-rv32-ram-freertos.ld
 LDFILE    ?= boards/$(BOARD)/platform_config/linker/miv-rv32-ram.ld
 #LDFILE    ?= boards/$(BOARD)/platform_config/linker/miv-rv32-esram.ld
 

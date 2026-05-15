@@ -10,8 +10,8 @@ TARGET        ?= rv32-rtos-demo
 #-----------------------------------------------------
 #select one of the board from the below list available 
 #-----------------------------------------------------
-BOARD     ?= m2s-creative-brd
-#BOARD    ?= polarfire-eval-kit
+#BOARD     ?= m2s-creative-brd
+BOARD    ?= polarfire-eval-kit
 #BOARD    ?= m2s-security-kit
 
 BUILD     ?= DEBUG
